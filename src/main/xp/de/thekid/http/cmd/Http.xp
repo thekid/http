@@ -21,10 +21,10 @@ import lang.types.StringExtensions;
  */
 public class Http extends util.cmd.Command {
   protected HttpConnection $conn;
-  protected string $method;
   protected [:string] $headers;
   protected [:string] $params;
-  protected ParameterFormat $formatter = ParameterFormat::$JSON;
+  protected var $formatter = ParameterFormat::$JSON;
+  protected var $request = new HttpRequest();
 
   /**
    * Sets method to use
@@ -32,7 +32,7 @@ public class Http extends util.cmd.Command {
    */
   [@arg(position = 0)]
   public void setMethod(string $method) {
-    $this.method= $method.toUpper();
+    $this.request.setMethod($method.toUpper());
   }
   
   /**
@@ -45,6 +45,7 @@ public class Http extends util.cmd.Command {
       $url= 'http://' ~ $url;
     }
     $this.conn= new HttpConnection($url);
+    $this.conn.create($this.request);
   }
   
   /**
@@ -92,20 +93,17 @@ public class Http extends util.cmd.Command {
    *
    */
   public int run() {
-    $request= $this.conn.create(new HttpRequest());
-    $request.setMethod($this.method);
-
-    if ('GET' === $this.method || 'HEAD' === $this.method) {
-      $request.setParameters($this.params);
+    if ('GET' === $this.request.method || 'HEAD' === $this.request.method) {
+      $this.request.setParameters($this.params);
     } else {
-      $request.setHeader('Content-Type', $this.formatter.contentType());
-      $request.setParameters($this.formatter.format($this.params));
+      $this.request.setHeader('Content-Type', $this.formatter.contentType());
+      $this.request.setParameters($this.formatter.format($this.params));
     }
 
-    $request.addHeaders($this.headers);
-    $this.err.writeLine($request.getRequestString());
+    $this.request.addHeaders($this.headers);
+    $this.err.writeLine($this.request.getRequestString());
     try {
-      $response= $this.conn.send($request);
+      $response= $this.conn.send($this.request);
     } catch (io.IOException $e) {
       $this.err.writeLine('*** ', $e);
       return 1;
