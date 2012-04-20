@@ -21,8 +21,6 @@ import lang.types.StringExtensions;
  */
 public class Http extends util.cmd.Command {
   protected HttpConnection $conn;
-  protected [:string] $headers;
-  protected [:string] $params;
   protected var $formatter = ParameterFormat::$JSON;
   protected var $request = new HttpRequest();
 
@@ -77,14 +75,26 @@ public class Http extends util.cmd.Command {
   public void setArguments(string[] $arguments) {
     $header= new text.regex.Scanner("%[^:]:%[^\n]");
     $params= new text.regex.Scanner("%[^=]=%[^\n]");
+
+    // Parse command line arguments
+    $parameters= new [:string] {:};
     foreach ($arg in $arguments) {
       if ($arg.contains(':')) {
         $match= $header.match($arg).group(0);
-        $this.headers[$match[1]]= $match[2];
+        $this.request.setHeader($match[1], $match[2]);
       } else if ($arg.contains('=')) {
         $match= $params.match($arg).group(0);
-        $this.params[$match[1]]= $match[2];
+        $parameters[$match[1]]= $match[2];
       }
+    }
+
+    // Format parameters, for GET and HEAD to query string, for all other 
+    // HTTP methods using the formatter
+    if ('GET' === $this.request.method || 'HEAD' === $this.request.method) {
+      $this.request.setParameters($parameters);
+    } else {
+      $this.request.setHeader('Content-Type', $this.formatter.contentType());
+      $this.request.setParameters($this.formatter.format($parameters));
     }
   }
 
@@ -93,14 +103,6 @@ public class Http extends util.cmd.Command {
    *
    */
   public int run() {
-    if ('GET' === $this.request.method || 'HEAD' === $this.request.method) {
-      $this.request.setParameters($this.params);
-    } else {
-      $this.request.setHeader('Content-Type', $this.formatter.contentType());
-      $this.request.setParameters($this.formatter.format($this.params));
-    }
-
-    $this.request.addHeaders($this.headers);
     $this.err.writeLine($this.request.getRequestString());
     try {
       $response= $this.conn.send($this.request);
@@ -109,7 +111,6 @@ public class Http extends util.cmd.Command {
       return 1;
     }
     $this.err.writeLine($response.getResponseString());
-    
     return 0;
   }
 }
