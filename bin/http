@@ -1,0 +1,9 @@
+#!/bin/sh
+
+s=$(realpath "$0")
+p=$(dirname "$s")/..
+if [ "$OSTYPE" = "cygwin" ]; then
+  p=$(cygpath -m "$p")
+fi
+
+xpcli -cp "$p/dist" de.thekid.http.cmd.Http "$@"
