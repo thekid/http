@@ -51,7 +51,7 @@ public class Http extends util.cmd.Command {
    * Use JSON
    *
    */
-  [@arg(short = 'j')]
+  [@arg(name = 'json', short = 'j')]
   public void useJson() {
     $this.formatter= ParameterFormat::$JSON;
   }
@@ -60,7 +60,7 @@ public class Http extends util.cmd.Command {
    * Use form parameters
    *
    */
-  [@arg(short = 'f')]
+  [@arg(name = 'form', short = 'f')]
   public void useForm() {
     $this.formatter= ParameterFormat::$FORM;
   }
