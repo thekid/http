@@ -1,0 +1,117 @@
+/* This class is part of the XP framework
+ *
+ * $Id$ 
+ */
+
+package de.thekid.http.cmd;
+
+import peer.http.HttpConnection;
+import peer.http.HttpRequest;
+import lang.types.StringExtensions;
+
+/**
+ * HTTP Command line utility
+ *
+ * Usage:
+ * <pre>
+ *   $ http METHOD URL [data]
+ * </pre>
+ *
+ * @see   https://github.com/jkbr/httpie
+ */
+public class Http extends util.cmd.Command {
+  protected HttpConnection $conn;
+  protected string $method;
+  protected [:string] $headers;
+  protected [:string] $params;
+  protected ParameterFormat $formatter = ParameterFormat::$JSON;
+
+  /**
+   * Sets method to use
+   *
+   */
+  [@arg(position = 0)]
+  public void setMethod(string $method) {
+    $this.method= $method.toUpper();
+  }
+  
+  /**
+   * Sets URL
+   *
+   */
+  [@arg(position = 1)]
+  public void setURL(string $url) {
+    if (!$url.contains('://')) {
+      $url= 'http://' ~ $url;
+    }
+    $this.conn= new HttpConnection($url);
+  }
+  
+  /**
+   * Use JSON
+   *
+   */
+  [@arg(short = 'j')]
+  public void useJson() {
+    $this.formatter= ParameterFormat::$JSON;
+  }
+  
+  /**
+   * Use form parameters
+   *
+   */
+  [@arg(short = 'f')]
+  public void useForm() {
+    $this.formatter= ParameterFormat::$FORM;
+  }
+  
+  /**
+   * Use the rest of the arguments
+   * <ul>
+   *   <li>Headers: Name:Value</li>
+   *   <li>Params:  Name=Value</li>
+   * </ul>
+   */
+  [@args(select = '[2..]')]
+  public void setArguments(string[] $arguments) {
+    $header= new text.regex.Scanner("%[^:]:%[^\n]");
+    $params= new text.regex.Scanner("%[^=]=%[^\n]");
+    foreach ($arg in $arguments) {
+      if ($arg.contains(':')) {
+        $match= $header.match($arg).group(0);
+        $this.headers[$match[1]]= $match[2];
+      } else if ($arg.contains('=')) {
+        $match= $params.match($arg).group(0);
+        $this.params[$match[1]]= $match[2];
+      }
+    }
+  }
+
+  /**
+   * Entry point
+   *
+   */
+  public int run() {
+    $request= $this.conn.create(new HttpRequest());
+    $request.setMethod($this.method);
+
+    if ('GET' === $this.method || 'HEAD' === $this.method) {
+      $request.setParameters($this.params);
+    } else {
+      $request.setHeader('Content-Type', $this.formatter.contentType());
+      $request.setParameters($this.formatter.format($this.params));
+    }
+
+    $request.addHeaders($this.headers);
+    $this.err.writeLine($request.getRequestString());
+    try {
+      $response= $this.conn.send($request);
+    } catch (io.IOException $e) {
+      $this.err.writeLine('*** ', $e);
+      return 1;
+    }
+    $this.err.writeLine($response.getResponseString());
+    
+    return 0;
+  }
+}

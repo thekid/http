@@ -1,0 +1,58 @@
+/* This class is part of the XP framework
+ *
+ * $Id$ 
+ */
+
+package lang.types;
+
+import native standard.strpos;
+import native standard.strrpos;
+import native standard.strtoupper;
+import native standard.strtolower;
+
+/**
+ * Primitive string extensions
+ *
+ */
+public class StringExtensions {
+
+  /**
+   * Returns whether the search string is contained within the given string
+   *
+   */
+  public static bool contains(this string $self, string $search) {
+    return false !== strpos($self, $search);
+  }
+
+  /**
+   * Returns the offset a substring starts within a string
+   *
+   */
+  public static bool indexOf(this string $self, string $search) {
+    return false === ($p= strpos($self, $search)) ? -1 : $p;
+  }
+
+  /**
+   * Returns the offset a substring starts within a string
+   *
+   */
+  public static bool lastIndexOf(this string $self, string $search) {
+    return false === ($p= strrpos($self, $search)) ? -1 : $p;
+  }
+
+  /**
+   * Returns an uppercase version
+   *
+   */
+  public static string toUpper(this string $self) {
+    return strtoupper($self);
+  }
+
+  /**
+   * Returns a lowercase version
+   *
+   */
+  public static string toLower(this string $self) {
+    return strtolower($self);
+  }
+}

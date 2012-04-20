@@ -1,0 +1,47 @@
+/* This class is part of the XP framework
+ *
+ * $Id$ 
+ */
+
+package de.thekid.http.cmd;
+
+import webservices.json.JsonDecoder;
+
+/**
+ * Formats parameters
+ *
+ */
+public abstract enum ParameterFormat {
+  JSON {
+    public var format([:string] $parameters) {
+      return new peer.http.RequestData(new JsonDecoder().encode($parameters));
+    }
+    
+    public string contentType() {
+      return 'application/json';
+    }
+  },
+  
+  FORM {
+    public var format([:string] $parameters) {
+      return $parameters;
+    }
+
+    
+    public string contentType() {
+      return 'application/x-www-form-urlencoded';
+    }
+  };
+  
+  /**
+   * Format parameters
+   *
+   */
+  public abstract var format([:string] $parameters);
+
+  /**
+   * Get content type
+   *
+   */
+  public abstract string contentType();
+}
