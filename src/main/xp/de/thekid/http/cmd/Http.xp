@@ -103,6 +103,8 @@ public class Http extends util.cmd.Command {
    *
    */
   public int run() {
+
+    // Send request
     $this.err.writeLine($this.request.getRequestString());
     try {
       $response= $this.conn.send($this.request);
@@ -110,7 +112,12 @@ public class Http extends util.cmd.Command {
       $this.err.writeLine('*** ', $e);
       return 1;
     }
+
+    // Print response
     $this.err.writeLine($response.getResponseString());
+    try ($t= new io.streams.StreamTransfer($response.getInputStream(), $this.out.getStream())) {
+      $t.transferAll();
+    }
     return 0;
   }
 }
