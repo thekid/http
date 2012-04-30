@@ -105,7 +105,7 @@ public class Http extends util.cmd.Command {
   public int run() {
 
     // Send request
-    $this.err.writeLine($this.request.getRequestString());
+    $this.err.writeLine($this.request.getHeaderString());
     try {
       $response= $this.conn.send($this.request);
     } catch (io.IOException $e) {
@@ -114,7 +114,7 @@ public class Http extends util.cmd.Command {
     }
 
     // Print response
-    $this.err.writeLine($response.getResponseString());
+    $this.err.writeLine($response.getHeaderString());
     try ($t= new io.streams.StreamTransfer($response.getInputStream(), $this.out.getStream())) {
       $t.transferAll();
     }
